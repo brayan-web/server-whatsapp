@@ -1,21 +1,42 @@
 const express = require("express");
+require('dotenv').config();
 const cors = require("cors");
 const { Client } = require('whatsapp-web.js');
+const socketIo = require('socket.io')
 const qrcode = require('qrcode-terminal');
 const client = new Client();
 const app = express();
-app.use(express.json());
-app.use(cors());
 
+const server = app.listen(4000, () => {
+  console.log(`Servidor corriendo en el puerto 4000`);
+});
+
+
+const io = socketIo(server, {
+  origin: process.env.FRONTEND_URL,
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+   credentials: true
+})
+
+app.use(express.json());
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  methods: ['GET', 'POST'],
+   credentials: true
+
+}));
 
 
 client.on('ready', () => {
   console.log('WhatsApp Client is ready!');
+  io.emit('connected', '¡Conexión exitosa! El cliente de WhatsApp está listo.');
 });
 
 
 client.on('qr', (qr) => {
   qrcode.generate(qr, { small: true });
+  io.emit('qr', qr)
 });
 
 
@@ -67,7 +88,7 @@ app.get("/", (req, res) => {
 
 
   
-  const PORT = 4000;
-  app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-  });
+  // const PORT = 4000;
+  // app.listen(PORT, () => {
+  //   console.log(`Servidor corriendo en el puerto ${PORT}`);
+  // });
