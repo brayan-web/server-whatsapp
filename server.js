@@ -13,15 +13,41 @@ const server = app.listen(4000, () => {
 
 
 const io = socketIo(server, {
-  origin: process.env.FRONTEND_URL,
+   origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000', // Origen de desarrollo
+      'https://serevr-whats-front.vercel.app', // Origen de producción
+      process.env.FRONTEND_URL // Usando el valor de tu variable de entorno
+    ];
+
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
    credentials: true
 })
 
 app.use(express.json());
+
+const allowedOrigins = [
+  'http://localhost:3000', // Tu frontend en desarrollo local
+  'https://serevr-whats-front.vercel.app', // Tu frontend en producción
+  process.env.FRONTEND_URL // Usando la variable de entorno para producción
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: function(origin, callback) {
+    // Verifica si el origen está en la lista de orígenes permitidos
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   methods: ['GET', 'POST'],
    credentials: true
 
